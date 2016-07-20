@@ -25,11 +25,11 @@ void compute_energy(double &kin, double &pot, int nfreq, double  beta, double U,
 void print_head_gf(cluster_matsubara_kspace_gf green);
 
 int main(int argc, char **argv) {
-    std::cout << "Calculating Energy from Self-Energy and Matsubara GF" << std::endl;
     std::string directory;
     std::string GF_h5_filename, Sim_h5_filename;
     int niteration, siteration;
     int nsites, nfreq, mu, beta, U;
+    bool info;
 
     try{    //command line parser
         TCLAP::CmdLine cmd("Calculate Energy from Matsubara Self Energies and Greens functions");
@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
         TCLAP::ValueArg<std::string> h5_filename_arg("x", "hdf5", "hdf5 file with parameters (sim.h5)", false, "sim.h5", "string", cmd);
         TCLAP::ValueArg<int> niteration_arg("n", "niteration", "number of iterations (0)", false, 0, "int", cmd);
         TCLAP::ValueArg<int> siteration_arg("s", "siteration", "starting iteration for energy calculation (0)", false, 0, "int", cmd);
+        TCLAP::ValueArg<bool> info_arg("i", "info", "output info about the calculation", false, false, "bool", cmd);
 
         cmd.parse( argc, argv );
 
@@ -46,12 +47,16 @@ int main(int argc, char **argv) {
         Sim_h5_filename = h5_filename_arg.getValue();
         niteration = niteration_arg.getValue();
         siteration = siteration_arg.getValue();
+        info = info_arg.getValue();
 
-        std::cout<<"Directory = "<<directory<<std::endl;
-        std::cout<<"GF_filename = "<<GF_h5_filename<<std::endl;
-        std::cout<<"h5_filename = "<<Sim_h5_filename<<std::endl;
-        std::cout<<"niteration = "<<niteration<<std::endl;
-        std::cout<<"siteration = "<<siteration<<std::endl;
+        if(info) {
+            std::cout << "Calculating Energy from Self-Energy and Matsubara GF" << std::endl;
+            std::cout << "Directory = " << directory << std::endl;
+            std::cout << "GF_filename = " << GF_h5_filename << std::endl;
+            std::cout << "h5_filename = " << Sim_h5_filename << std::endl;
+            std::cout << "niteration = " << niteration << std::endl;
+            std::cout << "siteration = " << siteration << std::endl;
+        }
         //help, directory, nfreq, nsite, mu, beta, U, selfenergy, gf, niteration, siteration
         //should get nfreq, nsite, mu, beta, and U from h5 file
         //also, self energy and gf file names optionally, default to G_omega,
@@ -307,18 +312,21 @@ void compute_energy(double &kin, double &pot, int nfreq, double  beta, double U,
     std::vector<double> ebuf(nfreq,0.);
     std::vector<double> I1(nfreq,0.);
     std::vector<double> I2(nfreq,0.);
-    double I1tot=0, I2tot=0;
+    std::vector<double> I3(nfreq,0.);
+    double I1tot=0, I2tot=0, I3tot=0;
     for(freq_index w(0);w<nfreq;++w){
         double wn((2.*w()+1)*M_PI/beta);
         for(spin_index f(0);f<2;++f){
             for(mom_index p(0);p<nsite;++p){
-                I1[w()]+=2./(beta*nsite)*(-wn*green(w,p,f).imag()-1.);
-                I2[w()]+=2./(beta*nsite)*(-sigma(w,p,f).imag()*green(w,p,f).imag() + sigma(w,p,f).real()*green(w,p,f).real());
+                I1[w()] += 2./(beta*nsite)*(-wn*green(w,p,f).imag()-1.);
+                I2[w()] += 2./(beta*nsite)*(-sigma(w,p,f).imag()*green(w,p,f).imag() + sigma(w,p,f).real()*green(w,p,f).real());
+                I3[w()] += 2./(beta*nsite)*green(w,p,f).real();
             }
         }
         ebuf[w()]=I1[w()]+I2[w()];
         I1tot+=I1[w()];
         I2tot+=I2[w()];
+        I3tot+=I3[w()];
     }
     //Get tails
     cluster_matsubara_kspace_gf_tail green_c1 = green.tail(1);
@@ -339,17 +347,28 @@ void compute_energy(double &kin, double &pot, int nfreq, double  beta, double U,
     }
     //hifreq of G
     double energy_gomega_hifreq=0.;
+    double energy_gomega_hifreq_3=0.;
+    std::cout<<"G.c3, highfreq_int="<<hifreq_integral_square<<std::endl;
     {
         for(mom_index p(0);p<nsite;++p){
             for(spin_index f(0);f<2;++f){
                 energy_gomega_hifreq -= 2./(beta*nsite)*(green_c3(p,f))*hifreq_integral_square;
+                energy_gomega_hifreq_3 -= 2./(beta*nsite)*green_c2(p,f)*hifreq_integral_square;
+                //std::cout<<green_c3(p,f)<<std::endl;
             }
         }
     }
-
+    std::cout<<"energy_gomega_hifreq="<<energy_gomega_hifreq<<std::endl;
+    std::cout<<"I1tot="<<I1tot<<",\tI2tot="<<I2tot<<std::endl;
+    I3tot += energy_gomega_hifreq_3;
     I2tot += (energy_sigmag_hifreq_1+energy_sigmag_hifreq_2);
     I1tot += energy_gomega_hifreq;
 
     kin = I1tot - I2tot;
-    pot = U/4. + I2tot/2.;
+    pot = U/4. + I2tot/2. + U*I3tot/2.;
+
+    std::cout<<"I1tot="<<I1tot<<",\tI2tot="<<I2tot<<std::endl;
+    std::cout<<I3tot<<std::endl;
+    std::cout<<U<<std::endl;
+    std::cout<<"kin="<<kin<<",\tpot="<<pot<<std::endl;
 }
