@@ -19,9 +19,9 @@ void print_tails(cluster_matsubara_kspace_gf green);
 void calculate_density(int nfreq, int nsite, double beta, cluster_matsubara_kspace_gf &green,
                        cluster_matsubara_kspace_gf &sigma, std::vector<double> & density);
 void calculate_green_sigma_ave(int M, std::vector<cluster_matsubara_kspace_gf> greens, std::vector<cluster_matsubara_kspace_gf> sigmas,
-                               cluster_matsubara_kspace_gf &green_ave, cluster_matsubara_kspace_gf &sigma_ave, bool partial, int partial_index);
+                               cluster_matsubara_kspace_gf &green_ave, cluster_matsubara_kspace_gf &sigma_ave, bool partial, int partial_index, bool info);
 void compute_energy(double &kin, double &pot, int nfreq, double  beta, double U, int nsite,
-                    cluster_matsubara_kspace_gf &green, cluster_matsubara_kspace_gf &sigma);
+                    cluster_matsubara_kspace_gf &green, cluster_matsubara_kspace_gf &sigma, bool info);
 void print_head_gf(cluster_matsubara_kspace_gf green);
 
 int main(int argc, char **argv) {
@@ -70,8 +70,9 @@ int main(int argc, char **argv) {
     }
 
     int num_iterations = niteration - siteration + 1;
-    std::cout<<"Num Iterations = "<<num_iterations<<std::endl;
-
+    if(info) {
+        std::cout << "Num Iterations = " << num_iterations << std::endl;
+    }
     //Get parameters from simulation h5 file
     std::stringstream h5_file_fullpath; h5_file_fullpath << directory<< "/" <<Sim_h5_filename;
     alps::hdf5::archive ar(h5_file_fullpath.str().c_str(), alps::hdf5::archive::READ);
@@ -81,11 +82,13 @@ int main(int argc, char **argv) {
     ar.read("/parameters/MU", mu);
     ar.read("/parameters/BETA", beta);
 
-    std::cout<<"nsites = "<<nsites<<std::endl;
-    std::cout<<"nfreq = "<<nfreq<<std::endl;
-    std::cout<<"U = "<<U<<std::endl;
-    std::cout<<"mu = "<<mu<<std::endl;
-    std::cout<<"beta = "<<beta<<std::endl;
+    if(info) {
+        std::cout << "nsites = " << nsites << std::endl;
+        std::cout << "nfreq = " << nfreq << std::endl;
+        std::cout << "U = " << U << std::endl;
+        std::cout << "mu = " << mu << std::endl;
+        std::cout << "beta = " << beta << std::endl;
+    }
     ar.close();
 
     //Dummy gf just so we can initialize vector
@@ -118,27 +121,27 @@ int main(int argc, char **argv) {
     cluster_matsubara_kspace_gf green_zero(template_gf);
     cluster_matsubara_kspace_gf green_bar(template_gf);
 
-   // std::vector<std::vector<double> > density_i(num_iterations, std::vector<double>(nsites*2, 0.5));
-   // std::vector<double> density_zero(nsites*2, 0.5);
-   // std::vector<double> density_bar(nsites*2, 0.5);
-
-    std::cout<<"Sigma_i "<<0<<std::endl;
-    print_tails(sigma_i[0]);
-
     /*
      * Calculate each of the needed jackknife quantities
      */
-    calculate_green_sigma_ave(num_iterations, green, sigma, green_zero, sigma_zero, false, 0);
+    calculate_green_sigma_ave(num_iterations, green, sigma, green_zero, sigma_zero, false, 0, info);
     for(int z=0; z<num_iterations; ++z){
-        calculate_green_sigma_ave(num_iterations, green, sigma, green_i[z], sigma_i[z], true, z);
+        calculate_green_sigma_ave(num_iterations, green, sigma, green_i[z], sigma_i[z], true, z, info);
     }
-    calculate_green_sigma_ave(num_iterations, green_i, sigma_i, green_bar, sigma_bar, false, 0);
+    calculate_green_sigma_ave(num_iterations, green_i, sigma_i, green_bar, sigma_bar, false, 0, info);
 
-    print_head_gf(green[0]);
-    print_head_gf(sigma[0]);
-    print_head_gf(sigma_zero);
-    print_head_gf(sigma_i[0]);
-    print_head_gf(sigma_bar);
+    if(info) {
+        std::cout<<"G_0"<<std::endl;
+        print_head_gf(green[0]);
+        std::cout<<"Sigma_0"<<std::endl;
+        print_head_gf(sigma[0]);
+        std::cout<<"Sigma_zero"<<std::endl;
+        print_head_gf(sigma_zero);
+        std::cout<<"Sigma_i0"<<std::endl;
+        print_head_gf(sigma_i[0]);
+        std::cout<<"Sigma_bar"<<std::endl;
+        print_head_gf(sigma_bar);
+    }
 
     /*
      * Compute the potential and kinetic energies
@@ -148,10 +151,10 @@ int main(int argc, char **argv) {
     double ekin_zero, ekin_bar;
     double epot_zero, epot_bar;
     for(int z=0;z<num_iterations;++z){
-        compute_energy(ekin_i[z], epot_i[z], nfreq,  beta, U, nsites, green_i[z], sigma_i[z]);
+        compute_energy(ekin_i[z], epot_i[z], nfreq,  beta, U, nsites, green_i[z], sigma_i[z], info);
     }
-    compute_energy(ekin_zero, epot_zero, nfreq,  beta, U, nsites, green_zero, sigma_zero);
-    compute_energy(ekin_bar, epot_bar, nfreq,  beta, U, nsites, green_bar, sigma_bar);
+    compute_energy(ekin_zero, epot_zero, nfreq,  beta, U, nsites, green_zero, sigma_zero, info);
+    compute_energy(ekin_bar, epot_bar, nfreq,  beta, U, nsites, green_bar, sigma_bar, info);
 
     /***********************************/
     //Jackknife mean and error
@@ -169,15 +172,15 @@ int main(int argc, char **argv) {
     double ekin_error=std::sqrt(num_iterations-1.)*std::sqrt(fabs(ekin_isquare/num_iterations-ekin_bar*ekin_bar));
     double epot_error=std::sqrt(num_iterations-1.)*std::sqrt(fabs(epot_isquare/num_iterations-epot_bar*epot_bar));
 
-    std::cout<<1.0/nfreq<<" "<<ekin_mean<<" "<<ekin_error<<" "<<epot_mean<<" "<<epot_error<<" "<<ekin_mean+epot_mean<<std::endl;
+    std::cout<<1.0/nfreq<<" "<<ekin_mean<<" "<<ekin_error<<" "<<epot_mean<<" "<<epot_error<<" "<<ekin_mean+epot_mean<<" "<<nsites<<std::endl;
 
 
     return 0;
 }
 
 void calculate_green_sigma_ave(int M, std::vector<cluster_matsubara_kspace_gf> greens, std::vector<cluster_matsubara_kspace_gf> sigmas,
-                    cluster_matsubara_kspace_gf &green_ave, cluster_matsubara_kspace_gf &sigma_ave, bool partial, int partial_index){
-    std::cout<<"Gathering tails"<<std::endl;
+                    cluster_matsubara_kspace_gf &green_ave, cluster_matsubara_kspace_gf &sigma_ave, bool partial, int partial_index, bool info){
+    //std::cout<<"Gathering tails"<<std::endl;
     //Get tails
     cluster_matsubara_kspace_gf_tail green_c1 = greens[0].tail(1);
     cluster_matsubara_kspace_gf_tail green_c2 = greens[0].tail(2);
@@ -196,14 +199,16 @@ void calculate_green_sigma_ave(int M, std::vector<cluster_matsubara_kspace_gf> g
 
     double N = (partial ? M-1 : M);
     if(int(N) == 0){
-        std::cout<<"Cannot calculate partial for only one iteration, returning zero"<<std::endl;
-        std::cout<<"Setting blank tails"<<std::endl;
+        if(info) {
+            std::cout << "Cannot calculate partial for only one iteration, returning zero" << std::endl;
+            std::cout << "Setting blank tails" << std::endl;
+        }
         green_ave.set_tail(1, green_c1);    sigma_ave.set_tail(0, sigma_c0);
         green_ave.set_tail(2, green_c2);    sigma_ave.set_tail(1, sigma_c1);
         green_ave.set_tail(3, green_c3);
         return;
     }
-    std::cout<<"Calculating aves"<<std::endl;
+    //std::cout<<"Calculating aves"<<std::endl;
     for(int z=0; z<M; ++z){
         if(partial && partial_index == z) {
             continue;
@@ -226,7 +231,7 @@ void calculate_green_sigma_ave(int M, std::vector<cluster_matsubara_kspace_gf> g
     green_c2 /= N;  sigma_c1 /= N;
     green_c3 /= N;
 
-    std::cout<<"Setting tails"<<std::endl;
+    //std::cout<<"Setting tails"<<std::endl;
     green_ave.set_tail(1, green_c1);    sigma_ave.set_tail(0, sigma_c0);
     green_ave.set_tail(2, green_c2);    sigma_ave.set_tail(1, sigma_c1);
     green_ave.set_tail(3, green_c3);
@@ -276,10 +281,6 @@ void read_iteration(int iteration, const std::string &directory, const std::stri
 
     green.load(ar, "/G_komega");
     sigma.load(ar, "/Sigma_komega");
-    std::cout<<"Tails for Green "<<iteration<<std::endl;
-    print_tails(green);
-    std::cout<<"Tails for Sigma "<<iteration<<std::endl;
-    print_tails(sigma);
 }
 
 void calculate_density(int nfreq, int nsite, double beta, cluster_matsubara_kspace_gf &green,
@@ -306,7 +307,7 @@ void calculate_density(int nfreq, int nsite, double beta, cluster_matsubara_kspa
 }
 
 void compute_energy(double &kin, double &pot, int nfreq, double  beta, double U, int nsite,
-                    cluster_matsubara_kspace_gf &green, cluster_matsubara_kspace_gf &sigma){
+                    cluster_matsubara_kspace_gf &green, cluster_matsubara_kspace_gf &sigma, bool info){
     double energy_sigmag_hifreq_1=0, energy_sigmag_hifreq_2=0;
     double hifreq_integral_square=beta*beta*gsl_sf_psi_n (1, 0.5+nfreq)/(4.*M_PI*M_PI); //this takes care of the 1/omega^2 part
     std::vector<double> ebuf(nfreq,0.);
@@ -348,7 +349,9 @@ void compute_energy(double &kin, double &pot, int nfreq, double  beta, double U,
     //hifreq of G
     double energy_gomega_hifreq=0.;
     double energy_gomega_hifreq_3=0.;
-    std::cout<<"G.c3, highfreq_int="<<hifreq_integral_square<<std::endl;
+    if(info) {
+        std::cout << "G.c3, highfreq_int=" << hifreq_integral_square << std::endl;
+    }
     {
         for(mom_index p(0);p<nsite;++p){
             for(spin_index f(0);f<2;++f){
@@ -358,8 +361,10 @@ void compute_energy(double &kin, double &pot, int nfreq, double  beta, double U,
             }
         }
     }
-    std::cout<<"energy_gomega_hifreq="<<energy_gomega_hifreq<<std::endl;
-    std::cout<<"I1tot="<<I1tot<<",\tI2tot="<<I2tot<<std::endl;
+    if(info) {
+        std::cout << "energy_gomega_hifreq=" << energy_gomega_hifreq << std::endl;
+        std::cout << "I1tot=" << I1tot << ",\tI2tot=" << I2tot << std::endl;
+    }
     I3tot += energy_gomega_hifreq_3;
     I2tot += (energy_sigmag_hifreq_1+energy_sigmag_hifreq_2);
     I1tot += energy_gomega_hifreq;
@@ -367,8 +372,10 @@ void compute_energy(double &kin, double &pot, int nfreq, double  beta, double U,
     kin = I1tot - I2tot;
     pot = U/4. + I2tot/2. + U*I3tot/2.;
 
-    std::cout<<"I1tot="<<I1tot<<",\tI2tot="<<I2tot<<std::endl;
-    std::cout<<I3tot<<std::endl;
-    std::cout<<U<<std::endl;
-    std::cout<<"kin="<<kin<<",\tpot="<<pot<<std::endl;
+    if(info) {
+        std::cout << "I1tot=" << I1tot << ",\tI2tot=" << I2tot << std::endl;
+        std::cout << I3tot << std::endl;
+        std::cout << U << std::endl;
+        std::cout << "kin=" << kin << ",\tpot=" << pot << std::endl;
+    }
 }
