@@ -370,7 +370,7 @@ void compute_energy(double &kin, double &pot, int nfreq, double  beta, double U,
     I1tot += energy_gomega_hifreq;
 
     kin = I1tot - I2tot;
-    pot = U/4. + I2tot/2. + U*I3tot/2.;
+    pot = U/4. + I2tot/2. - U*I3tot/4.; //Check the coeff on I3tot term
 
     if(info) {
         std::cout << "I1tot=" << I1tot << ",\tI2tot=" << I2tot << std::endl;
