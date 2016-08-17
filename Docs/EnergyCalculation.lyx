@@ -1,0 +1,759 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 0.5cm
+\topmargin 2cm
+\rightmargin 0.5cm
+\bottommargin 2cm
+\columnsep 2cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 2
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+How to Calculate Energies from 
+\begin_inset Formula $G_{\sigma}(k,i\omega_{n})$
+\end_inset
+
+ and 
+\begin_inset Formula $\Sigma_{\sigma}(k,i\omega_{n})$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Author
+Joe Paki
+\end_layout
+
+\begin_layout Date
+08/15/2016
+\end_layout
+
+\begin_layout Section
+Brief
+\end_layout
+
+\begin_layout Standard
+The outputs of DMFT are generally greens functions, 
+\begin_inset Formula $G_{\sigma}(k,i\omega_{n})$
+\end_inset
+
+, and self-energies, 
+\begin_inset Formula $\Sigma_{\sigma}(k,i\omega_{n})$
+\end_inset
+
+, in momentum and Matsubara space.
+ From these outputs, we would like to be able to calculate various observables,
+ the most obvious being the energy of the system.
+ This document presents a derivation of the formulas used to calculate the
+ energy used by the ALPSCore based program 
+\emph on
+energy-alpscore
+\emph default
+.
+\end_layout
+
+\begin_layout Section
+Formula Derivation
+\end_layout
+
+\begin_layout Standard
+The energy per site is given by the expectation value of the Hamiltonian,
+ which in our case is given by the Hubbard Hamiltonian.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+E=\left\langle H\right\rangle 
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+H=\sum_{k\sigma}\left(\epsilon(k)-\mu\right)c_{k\sigma}^{\dagger}c_{k\sigma}+U\sum_{i}\left(n_{i\uparrow}-\frac{1}{2}\right)\left(n_{i\downarrow}-\frac{1}{2}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We can split the total energy into kinetic and potential energies as follows.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+E=E_{K}+E_{V}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+E_{K}=\left\langle \sum_{k\sigma}\left(\epsilon(k)-\mu\right)c_{k\sigma}^{\dagger}c_{k\sigma}\right\rangle 
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+E_{V}=\left\langle U\sum_{i}\left(n_{i\uparrow}-\frac{1}{2}\right)\left(n_{i\downarrow}-\frac{1}{2}\right)\right\rangle 
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We would like to write these formulas in terms of 
+\begin_inset Formula $G_{\sigma}(k,i\omega_{n})$
+\end_inset
+
+ and 
+\begin_inset Formula $\Sigma_{\sigma}(k,i\omega_{n})$
+\end_inset
+
+.
+ Begin by rearranging the expressions, noting that 
+\begin_inset Formula $G_{\sigma}^{-1}(k,i\omega_{n})=i\omega_{n}-\epsilon(k)+\mu-\Sigma_{\sigma}(k,i\omega_{n})$
+\end_inset
+
+, and using translational invariance.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+E_{K} & = & \sum_{k\sigma}\left(\epsilon(k)-\mu\right)\left\langle c_{k\sigma}^{\dagger}c_{k\sigma}\right\rangle \\
+ & = & \sum_{k\sigma}\left(\epsilon(k)-\mu\right)\left\langle n_{k\sigma}\right\rangle \\
+ & = & \sum_{k\sigma}\left(i\omega_{n}-\Sigma_{\sigma}(k,i\omega_{n})-G_{\sigma}^{-1}(k,i\omega_{n})\right)\left\langle n_{k\sigma}\right\rangle 
+\end{eqnarray*}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{eqnarray*}
+E_{V} & = & \left\langle U\sum_{i}\left(n_{i\uparrow}n_{i\downarrow}-\frac{1}{2}n_{i\uparrow}-\frac{1}{2}n_{i\downarrow}+\frac{1}{4}\right)\right\rangle \\
+ & = & \frac{UN}{4}-\frac{U}{2}\sum_{i\sigma}\left\langle n_{i\sigma}\right\rangle +U\sum_{i}\left\langle n_{i\uparrow}n_{i\downarrow}\right\rangle \\
+ & = & \frac{UN}{4}-\frac{U}{2}\sum_{k\sigma}\left\langle n_{k\sigma}\right\rangle +U\sum_{i}\left\langle n_{i\uparrow}n_{i\downarrow}\right\rangle 
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+So we really just need to express 
+\begin_inset Formula $\left\langle n_{k\sigma}\right\rangle $
+\end_inset
+
+ and 
+\begin_inset Formula $\left\langle n_{i\uparrow}n_{i\downarrow}\right\rangle $
+\end_inset
+
+ in terms of 
+\begin_inset Formula $G_{\sigma}(k,i\omega_{n})$
+\end_inset
+
+ and 
+\begin_inset Formula $\Sigma_{\sigma}(k,i\omega_{n})$
+\end_inset
+
+.
+ The expectation value of the density is the easier value to calculate.
+ Starting with the definition of the Greens function in imaginary time,
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+G_{\sigma}(k,\tau) & = & -\left\langle T_{\tau}c_{k\sigma}(\tau)c_{k\sigma}^{\dagger}(0)\right\rangle \\
+G_{\sigma}(k,\tau+\beta) & = & -G_{\sigma}(k,\tau)\\
+G_{\sigma}(k,\tau) & = & \frac{1}{\beta}\sum_{n}G_{\sigma}(k,i\omega_{n})e^{-i\omega_{n}\tau}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We can calculate
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+\left\langle n_{k\sigma}\right\rangle  & = & \left\langle c_{k\sigma}^{\dagger}c_{k\sigma}\right\rangle \\
+ & = & \left\langle c_{k\sigma}^{\dagger}(0)c_{k\sigma}(\tau=0^{-})\right\rangle \\
+ & = & -\left\langle T_{\tau}c_{k\sigma}(\tau=0^{-})c_{k\sigma}^{\dagger}(0)\right\rangle \\
+ & = & G_{\sigma}(k,\tau\rightarrow0^{-})\\
+ & = & \frac{1}{\beta}\sum_{n}G_{\sigma}(k,i\omega_{n})e^{i\omega_{n}0^{+}}\\
+ & = & \frac{1}{\beta}\sum_{n}G_{\sigma}(k,i\omega_{n})
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to write 
+\begin_inset Formula $\left\langle n_{i\uparrow}n_{i\downarrow}\right\rangle $
+\end_inset
+
+ in terms of 
+\begin_inset Formula $G_{\sigma}(k,i\omega_{n})$
+\end_inset
+
+ and 
+\begin_inset Formula $\Sigma_{\sigma}(k,i\omega_{n})$
+\end_inset
+
+, we make use of two identities (that you can find in Coleman),
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\sum_{k\sigma}c_{k\sigma}^{\dagger}\left[H_{0},c_{k\sigma}\right]=-H_{0}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+-2V=\sum_{k\sigma}c_{k\sigma}^{\dagger}\left[V,c_{k\sigma}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where 
+\begin_inset Formula $H_{0}$
+\end_inset
+
+ is the non-interacting part of the Hamiltonian and 
+\begin_inset Formula $V$
+\end_inset
+
+ is a general interaction of the form
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+V=\sum_{k_{1}k_{2}k_{3}k_{4}}V(k_{1},k_{2},k_{3},k_{4})c_{k_{1}}^{\dagger}c_{k_{2}}^{\dagger}c_{k_{3}}c_{k_{4}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where the 
+\begin_inset Formula $k_{i}$
+\end_inset
+
+ indices stand for all relevant state indices, ie momentum and spin.
+ We also use the equation of motion for an operator 
+\begin_inset Formula $O$
+\end_inset
+
+,
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{\partial O}{\partial\tau}=\left[H,O\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In our case,
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+V=\sum_{i}n_{i\uparrow}n_{i\downarrow}=H-H_{0}-\frac{UN}{4}+\frac{U}{2}\sum_{k\sigma}n_{k\sigma}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+H_{0} & = & \sum_{k\sigma}\left(i\omega_{n}-\Sigma_{\sigma}(k,i\omega_{n})-G_{\sigma}^{-1}(k,i\omega_{n})\right)n_{k\sigma}\\
+ & = & \frac{1}{\beta}\sum_{nk\sigma}\left[-1e^{i\omega_{n}0^{+}}+\left(i\omega_{n}-\Sigma_{\sigma}(k,i\omega_{n})\right)G_{\sigma}(k,i\omega_{n})e^{i\omega_{n}0^{+}}\right]
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+So,
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+\left\langle \sum_{i}n_{i\uparrow}n_{i\downarrow}\right\rangle  & = & \left\langle V\right\rangle \\
+ & = & \left\langle -\frac{1}{2}\sum_{k\sigma}c_{k\sigma}^{\dagger}\left[\sum_{i}n_{i\uparrow}n_{i\downarrow},c_{k\sigma}\right]\right\rangle \\
+ & = & \frac{-1}{2}\sum_{k\sigma}\left\langle c_{k\sigma}^{\dagger}\left[H-H_{0}-\frac{UN}{4}+\frac{U}{2}\sum_{k\sigma}n_{k\sigma},c_{k\sigma}\right]\right\rangle \\
+ & = & \frac{-1}{2}\sum_{k\sigma}\left\langle c_{k\sigma}^{\dagger}\left[H,c_{k\sigma}\right]\right\rangle -\left\langle c_{k\sigma}^{\dagger}\left[H_{0},c_{k\sigma}\right]\right\rangle \\
+ & + & \frac{U}{2}\left\langle c_{k\sigma}^{\dagger}\left[\sum_{k\sigma}n_{k\sigma},c_{k\sigma}\right]\right\rangle \\
+ & = & -\frac{1}{2}\left(\sum_{k\sigma}\left[\left(\frac{\partial G_{\sigma}(k,\tau)}{\partial\tau}\right)_{\tau\rightarrow0^{-}}-\frac{U}{2}\left\langle n_{k\sigma}\right\rangle \right]+H_{0}\right)\\
+ & = & -\frac{1}{2}\sum_{nk\sigma}\left[\frac{-i\omega_{n}}{\beta}G_{\sigma}(k,i\omega_{n})e^{i\omega_{n}0^{+}}-\frac{U}{2\beta}G_{\sigma}(k,i\omega_{n})e^{i\omega_{n}0^{+}}\right]\\
+ & + & -\frac{1}{2\beta}\sum_{nk\sigma}\left[-1e^{i\omega_{n}0^{+}}+\left(i\omega_{n}-\Sigma_{\sigma}(k,i\omega_{n})\right)G_{\sigma}(k,i\omega_{n})e^{i\omega_{n}0^{+}}\right]\\
+ & = & \frac{1}{2\beta}\sum_{nk\sigma}\Sigma_{\sigma}(k,i\omega_{n})G_{\sigma}(k,i\omega_{n})+\frac{U}{4\beta}\sum_{nk\sigma}G_{\sigma}(k,i\omega_{n})
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where we used that
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{1}{\beta}\sum_{n}e^{i\omega_{n}0^{+}}=-\frac{1}{2\pi i}\int dz\frac{e^{z0^{+}}}{e^{\beta z}+1}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+By the residue theorem, with a contour that encompasses the poles at 
+\begin_inset Formula $e^{\beta z}=-1$
+\end_inset
+
+, 
+\begin_inset Formula $\beta z=i(2n+1)\pi$
+\end_inset
+
+, 
+\begin_inset Formula $z=i(2n+1)/\beta=i\omega_{n}$
+\end_inset
+
+, along the imaginary axis.
+ If we reverse the direction of the contour, we would instead pick up the
+ poles outside of this contour, those belonging to 
+\begin_inset Formula $e^{z0^{+}}$
+\end_inset
+
+.
+ But this function has no poles, and thus no residues.
+ So,
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{1}{\beta}\sum_{n}e^{i\omega_{n}0^{+}}=0
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Our final results for the energy in terms of 
+\begin_inset Formula $G_{\sigma}(k,i\omega_{n})$
+\end_inset
+
+ and 
+\begin_inset Formula $\Sigma_{\sigma}(k,i\omega_{n})$
+\end_inset
+
+ are then:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+E=E_{K}+E_{V}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+E_{K}=\frac{1}{\beta}\sum_{nk\sigma}\left[-1+\left(i\omega_{n}-\Sigma_{\sigma}(k,i\omega_{n})\right)G_{\sigma}(k,i\omega_{n})\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+E_{V} & = & \frac{UN}{4}-\frac{U}{2\beta}\sum_{nk\sigma}G_{\sigma}(k,i\omega_{n})\\
+ &  & +\frac{1}{2\beta}\sum_{nk\sigma}\Sigma_{\sigma}(k,i\omega_{n})G_{\sigma}(k,i\omega_{n})+\frac{U}{4\beta}\sum_{nk\sigma}G_{\sigma}(k,i\omega_{n})\\
+ & = & \frac{UN}{4}-\frac{U}{4\beta}\sum_{nk\sigma}G_{\sigma}(k,i\omega_{n})\\
+ &  & +\frac{1}{2\beta}\sum_{nk\sigma}\Sigma_{\sigma}(k,i\omega_{n})G_{\sigma}(k,i\omega_{n})
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The energy should be a real valued quantity, and one can check that the
+ above formulas satisfy this constraint by using that
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+G^{*}(i\omega_{n}) & = & G(-i\omega_{n})\\
+\Sigma^{*}(i\omega_{n}) & = & \Sigma(-i\omega_{n})
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Since the frequency sums kill any terms that have odd frequency parity,
+ only certain combinations of real (
+\begin_inset Formula $\Re$
+\end_inset
+
+) and imaginary (
+\begin_inset Formula $\Im$
+\end_inset
+
+) parts survive
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+E_{K}=\frac{2}{\beta}\sum_{n\geq0,k\sigma}\left[-1-\Re\Sigma\Re G-\omega_{n}\Im G+\Im\Sigma\Im G\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+E_{V}=\frac{UN}{4}-\frac{2U}{4\beta}\sum_{n\geq0,k\sigma}\Re G+\frac{2}{2\beta}\sum_{n\geq0,k\sigma}\left(\Re\Sigma\Re G-\Im\Sigma\Im G\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+So there are really three terms that we need to compute
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+I_{1} & = & 2\sum_{n\geq0,k\sigma}\left[-1-\omega_{n}\Im G\right]\\
+I_{2} & = & 2\sum_{n\geq0,k\sigma}\left(\Re\Sigma\Re G-\Im\Sigma\Im G\right)\\
+I_{3} & = & 2\sum_{n\geq0,k\sigma}\Re G
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+So
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+E_{K} & = & \frac{I_{1}}{\beta}-\frac{I_{2}}{\beta}\\
+E_{V} & = & \frac{UN}{4}-\frac{U}{4\beta}I_{3}+\frac{1}{2\beta}I_{2}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+High Frequency Tails
+\end_layout
+
+\begin_layout Standard
+The above formulas tell us how to calculate the energy theoretically, but
+ on a computer we cannot actually do the full summation over Matsubara frequenci
+es.
+ The stored greens functions and self-energies are always truncated at some
+ maximum frequency, 
+\begin_inset Formula $i\omega_{n_{m}}$
+\end_inset
+
+.
+ We cannot simply truncate the sum, however, because these functions decay
+ slowly as a function of 
+\begin_inset Formula $i\omega_{n}$
+\end_inset
+
+ due to the discontinuity in 
+\begin_inset Formula $G_{\sigma}(k,\tau)$
+\end_inset
+
+ at 
+\begin_inset Formula $\tau=0$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+We solve this problem by utilizing analytic high frequency tails for 
+\begin_inset Formula $G_{\sigma}(k,i\omega_{n})$
+\end_inset
+
+ and 
+\begin_inset Formula $\Sigma_{\sigma}(k,i\omega_{n})$
+\end_inset
+
+,
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\Sigma_{\sigma}^{tail}(k,i\omega_{n})=\Sigma_{\sigma}^{0}(k)+\frac{\Sigma_{\sigma}^{0}(k)}{i\omega_{n}}+\mathcal{O}\left(\frac{1}{\left(i\omega_{n}\right)^{2}}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+G_{\sigma}^{tail}(k,i\omega_{n})=\frac{c_{\sigma}^{1}(k)}{i\omega_{n}}+\frac{c_{\sigma}^{2}(k)}{\left(i\omega_{n}\right)^{2}}+\frac{c_{\sigma}^{3}(k)}{\left(i\omega_{n}\right)^{3}}+\mathcal{O}\left(\frac{1}{\left(i\omega_{n}\right)^{4}}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The coefficients in these expansions can be calculated by hand (though it
+ is tedious, see Emanuel's thesis for details), and are computed during
+ the DMFT program and stored with the GFTools greens functions.
+ In the following, we explicity use that 
+\begin_inset Formula $c_{\sigma}^{1}(k)=1$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+The tails enable us to write the frequency sums as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\sum_{n}f(i\omega_{n})=\sum_{n\leq n_{m}}f(i\omega_{n})+\sum_{n>n_{m}}f^{tail}(i\omega_{n})
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The energy terms can now be written as (supressing momentum and spin, and
+ only keeping up to order 
+\begin_inset Formula $1/\omega_{n}^{2}$
+\end_inset
+
+ terms)
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+I_{1} & = & 2\sum_{n_{m}\geq n\geq0}\left[-1-\omega_{n}\Im G\right]+2\sum_{n>n_{m}}\left[-1-\omega_{n}\Im G^{tail}\right]\\
+ & = & 2\sum_{n_{m}\geq n\geq0}\left[-1-\omega_{n}\Im G\right]-2\sum_{n>n_{m}}\frac{c_{3}}{\omega_{n}^{2}}\\
+ & = & 2\sum_{n_{m}\geq n\geq0}\left[-1-\omega_{n}\Im G\right]-2c_{3}\Psi
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+I_{2} & = & 2\sum_{n_{m}\geq n\geq0}\left(\Re\Sigma\Re G-\Im\Sigma\Im G\right)+2\sum_{n>n_{m}}\left(\Re\Sigma^{tail}\Re G^{tail}-\Im\Sigma^{tail}\Im G^{tail}\right)\\
+ & = & 2\sum_{n_{m}\geq n\geq0}\left(\Re\Sigma\Re G-\Im\Sigma\Im G\right)+2\sum_{n>n_{m}}\left(\frac{-c^{1}\Sigma^{1}}{\omega_{n}^{2}}-\frac{\Sigma^{0}c^{2}}{\omega_{n}^{2}}\right)\\
+ & = & 2\sum_{n_{m}\geq n\geq0}\left(\Re\Sigma\Re G-\Im\Sigma\Im G\right)+2\left(-c^{1}\Sigma^{1}-\Sigma^{0}c^{2}\right)\Psi
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+I_{3} & = & 2\sum_{n_{m}\geq n\geq0}\Re G+2\sum_{n>n_{m}}\Re G^{tail}\\
+ & = & 2\sum_{n_{m}\geq n\geq0}\Re G-2\sum_{n>n_{m}}\frac{c_{2}}{\omega_{n}^{2}}\\
+ & = & 2\sum_{n_{m}\geq n\geq0}\Re G-2c_{2}\Psi
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+\Psi & = & \sum_{n>n_{m}}\frac{1}{\omega_{n}^{2}}\\
+ & = & \frac{\beta^{2}}{\pi^{2}4}\sum_{k=0}^{\infty}\frac{1}{\left(n_{m}+0.5+k\right)^{2}}\\
+ & = & \frac{\beta^{2}}{\pi^{2}4}\psi^{(1)}\left(n_{m}+0.5\right)
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where 
+\begin_inset Formula $\psi^{(n)}\left(x\right)$
+\end_inset
+
+ is the digamma function, which can be computed with a GSL function call
+ (gsl_sf_psi_n).
+\end_layout
+
+\end_body
+\end_document
