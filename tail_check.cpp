@@ -145,8 +145,21 @@ int main(int argc, char **argv){
 
         for(mom_index k(0); k<nsites; k++){
            for(spin_index s(0); s<2; s++){
+               if(f()==0){
+                   std::cout<<"k = ("<<green.mesh2().points()[k()][0]<<", "<<green.mesh2().points()[k()][1]<<"), spin = "<<s()<<std::endl;
+                   std::cout<<green_c1(k,s) <<"\t"<< green_c2(k,s) <<"\t"<< green_c3(k,s)<<"\t"<<(U*0.5 - 2*(std::cos(green.mesh2().points()[k()][0])+std::cos(green.mesh2().points()[k()][1])) - mu)<<std::endl;
+               }
+               if(f()==nfreq-1){
+                   std::cout<<"k = ("<<green.mesh2().points()[k()][0]<<", "<<green.mesh2().points()[k()][1]<<"), spin = "<<s()<<std::endl;
+                   std::cout<<"Fit value of c2(k) = "<<green(f,k,s).real()*ifreq*ifreq<<std::endl;
+                   std::cout<<"Attached value = "<<green_c2(k,s)<<std::endl;
+                   std::cout<<"Theory value = "<<(U*0.5 - 2*(std::cos(green.mesh2().points()[k()][0])+std::cos(green.mesh2().points()[k()][1])) - (mu+U/2.))<<std::endl;
+               }
                std::complex<double> g_val = green(f,k,s);
                std::complex<double> gtail_val = green_c1(k,s)/ifreq + green_c2(k,s)/(ifreq*ifreq) + green_c3(k,s)/(ifreq*ifreq*ifreq);
+               //std::complex<double> gtail_val = green_c1(k,s)/ifreq +
+               //        (U*0.5 - 2*(std::cos(green.mesh2().points()[k()][0])+std::cos(green.mesh2().points()[k()][1])) - (mu+U/2))/(ifreq*ifreq) +
+               //        green_c3(k,s)/(ifreq*ifreq*ifreq);
                std::complex<double> se_val = sigma(f,k,s);
                std::complex<double> setail_val = sigma_c0(k,s) + sigma_c1(k,s)/ifreq;
                G_out<<g_val.real()<<"\t"<<g_val.imag()<<"\t";
